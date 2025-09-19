@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from server.app import app
-from server.models import db, Recipe
+from app import app
+from models import db, Recipe
 
 
 class TestRecipe:

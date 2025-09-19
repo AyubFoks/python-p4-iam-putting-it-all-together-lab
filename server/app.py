@@ -4,13 +4,20 @@ from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from flask_restful import Api
 
-from .config import Config
+try:
+    from .config import Config
+except ImportError:
+    from config import Config
 
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
 
-from .models import User, Recipe
+try:
+    from .models import User, Recipe
+except ImportError:
+    from models import User, Recipe
+
 
 def create_app():
     app = Flask(__name__)
@@ -20,7 +27,10 @@ def create_app():
     migrate.init_app(app, db)
     bcrypt.init_app(app)
 
-    from .resources import Signup, Login, Logout, CheckSession, RecipeIndex
+    try:
+        from .resources import Signup, Login, Logout, CheckSession, RecipeIndex
+    except ImportError:
+        from resources import Signup, Login, Logout, CheckSession, RecipeIndex
     api = Api(app)
     api.add_resource(Signup, '/signup')
     api.add_resource(Login, '/login')
@@ -29,6 +39,7 @@ def create_app():
     api.add_resource(RecipeIndex, '/recipes')
 
     return app
+
 
 app = create_app()
 
