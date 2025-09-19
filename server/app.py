@@ -1,33 +1,36 @@
-#!/usr/bin/env python3
+from flask import Flask, session
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_bcrypt import Bcrypt
+from flask_restful import Api
 
-from flask import request, session
-from flask_restful import Resource
-from sqlalchemy.exc import IntegrityError
+from .config import Config
 
-from config import app, db, api
-from models import User, Recipe
+db = SQLAlchemy()
+migrate = Migrate()
+bcrypt = Bcrypt()
 
-class Signup(Resource):
-    pass
+from .models import User, Recipe
 
-class CheckSession(Resource):
-    pass
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-class Login(Resource):
-    pass
+    db.init_app(app)
+    migrate.init_app(app, db)
+    bcrypt.init_app(app)
 
-class Logout(Resource):
-    pass
+    from .resources import Signup, Login, Logout, CheckSession, RecipeIndex
+    api = Api(app)
+    api.add_resource(Signup, '/signup')
+    api.add_resource(Login, '/login')
+    api.add_resource(Logout, '/logout')
+    api.add_resource(CheckSession, '/check_session')
+    api.add_resource(RecipeIndex, '/recipes')
 
-class RecipeIndex(Resource):
-    pass
+    return app
 
-api.add_resource(Signup, '/signup', endpoint='signup')
-api.add_resource(CheckSession, '/check_session', endpoint='check_session')
-api.add_resource(Login, '/login', endpoint='login')
-api.add_resource(Logout, '/logout', endpoint='logout')
-api.add_resource(RecipeIndex, '/recipes', endpoint='recipes')
-
+app = create_app()
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
