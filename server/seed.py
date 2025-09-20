@@ -1,44 +1,63 @@
-from server.app import app, db
-from server.models import User, Recipe
+#!/usr/bin/env python3
+
+from random import randint, choice as rc
+
+from faker import Faker
+
+from app import app
+from models import db, Recipe, User
+
+fake = Faker()
 
 with app.app_context():
-    print("🧹 Clearing old data...")
+
+    print("Deleting all records...")
     Recipe.query.delete()
     User.query.delete()
 
-    print("🌱 Seeding users and recipes...")
+    fake = Faker()
 
-    user1 = User(
-        username="ashketchum",
-        image_url="https://example.com/ash.png",
-        bio="I want to be the very best!"
-    )
-    user1.password_hash = "pikachu"
+    print("Creating users...")
 
-    user2 = User(
-        username="mistywater",
-        image_url="https://example.com/misty.png",
-        bio="Leader of Cerulean Gym"
-    )
-    user2.password_hash = "togepi"
+    # make sure users have unique usernames
+    users = []
+    usernames = []
 
-    db.session.add_all([user1, user2])
+    for i in range(20):
+
+        username = fake.first_name()
+        while username in usernames:
+            username = fake.first_name()
+        usernames.append(username)
+
+        user = User(
+            username=username,
+            bio=fake.paragraph(nb_sentences=3),
+            image_url=fake.url(),
+        )
+
+        user.password_hash = user.username + 'password'
+
+        users.append(user)
+
+    db.session.add_all(users)
+
+    print("Creating recipes...")
+    recipes = []
+    for i in range(100):
+        instructions = fake.paragraph(nb_sentences=8)
+
+        recipe = Recipe(
+            title=fake.sentence(),
+            instructions=instructions,
+            minutes_to_complete=randint(15, 90),
+        )
+
+        recipe.user = rc(users)
+
+        recipes.append(recipe)
+
+    db.session.add_all(recipes)
+
     db.session.commit()
-
-    recipe1 = Recipe(
-        title="Poke Puffs",
-        instructions="First gather berries, then mix them carefully into flour and bake them at 180 degrees for 20 minutes until golden brown.",
-        minutes_to_complete=30,
-        user_id=user1.id
-    )
-
-    recipe2 = Recipe(
-        title="Seafood Surprise",
-        instructions="Begin with fresh caught Magikarp. Gut it, season with salt and pepper, and simmer with vegetables for 45 minutes until tender.",
-        minutes_to_complete=45,
-        user_id=user2.id
-    )
-
-    db.session.add_all([recipe1, recipe2])
-    db.session.commit()
-    print("✅ Seeded!")
+    print("Complete.")
